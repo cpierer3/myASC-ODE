@@ -1,6 +1,5 @@
 import numpy as np
-data = np.loadtxt('output_test_ode.txt', usecols=(0, 1, 2))
-# print (data)
+data = np.loadtxt("C:\\Users\\lukas\\Documents\\Scicomp2\\myASC-ODE\\build\\output_test_ode.txt", usecols=(0, 1, 2))
 
 import matplotlib.pyplot as plt
 

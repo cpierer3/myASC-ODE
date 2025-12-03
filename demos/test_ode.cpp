@@ -43,17 +43,16 @@ int main()
   Vector<> y = { 1, 0 };  // initializer list
   auto rhs = std::make_shared<MassSpring>(1.0, 1.0);
   
-  ImprovedEuler stepper(rhs);
+  CrankNicolson stepper(rhs);
   // ImplicitEuler stepper(rhs);
 
-  std::ofstream outfile ("output_test_ode.txt");
+  std::ofstream outfile ("C:\\Users\\lukas\\Documents\\Scicomp2\\myASC-ODE\\build\\output_test_ode.txt");
   std::cout << 0.0 << "  " << y(0) << " " << y(1) << std::endl;
   outfile << 0.0 << "  " << y(0) << " " << y(1) << std::endl;
 
   for (int i = 0; i < steps; i++)
   {
      stepper.doStep(tau, y);
-
      std::cout << (i+1) * tau << "  " << y(0) << " " << y(1) << std::endl;
      outfile << (i+1) * tau << "  " << y(0) << " " << y(1) << std::endl;
   }
