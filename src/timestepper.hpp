@@ -26,6 +26,7 @@ namespace ASC_ode
   public:
     ExplicitEuler(std::shared_ptr<NonlinearFunction> rhs) 
     : TimeStepper(rhs), m_vecf(rhs->dimF()) {}
+
     void doStep(double tau, VectorView<double> y) override
     {
       this->m_rhs->evaluate(y, m_vecf);
@@ -55,10 +56,23 @@ namespace ASC_ode
     }
   };
 
+    class ImprovedEuler : public TimeStepper
+  {
+      Vector<> m_vecf;
+      Vector<> m_ytemp;
+    public:
+      ImprovedEuler(std::shared_ptr<NonlinearFunction> rhs)
+      : TimeStepper(rhs), m_ytemp(rhs->dimF()), m_vecf(rhs->dimF()) {}
 
-  
+      void doStep(double tau, VectorView<double> y) override
+      {
+        
+        this->m_rhs->evaluate(y, m_vecf);
+        m_ytemp = y + 0.5 * tau * m_vecf;
+        this->m_rhs->evaluate(m_ytemp, m_vecf);
+        y += tau * m_vecf;
+      }
+  };
 
 }
-
-
 #endif
