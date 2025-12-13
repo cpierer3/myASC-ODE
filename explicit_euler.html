@@ -350,15 +350,6 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mathematical-formulation">Mathematical Formulation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#algorithm">Algorithm</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#properties">Properties</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#advantages">Advantages</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#disadvantages">Disadvantages</a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#implementation-in-myasc-ode">Implementation in myASC-ODE</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-use">When to Use</a></li>
 </ul>
             </nav>
         </div>
@@ -379,62 +370,6 @@ document.write(`
 $<span class="math notranslate nohighlight">\(\frac{dy}{dt} = f(t, y), \quad y(t_0) = y_0\)</span>$</p>
 <p>The Explicit Euler method approximates the solution using:
 $<span class="math notranslate nohighlight">\(y_{n+1} = y_n + h \cdot f(t_n, y_n)\)</span>$</p>
-</section>
-<section id="algorithm">
-<h2>Algorithm<a class="headerlink" href="#algorithm" title="Link to this heading">#</a></h2>
-<ol class="arabic simple">
-<li><p>Start with initial conditions: <span class="math notranslate nohighlight">\(t_0, y_0\)</span></p></li>
-<li><p>Choose a step size <span class="math notranslate nohighlight">\(h\)</span></p></li>
-<li><p>For each step <span class="math notranslate nohighlight">\(n = 0, 1, 2, ...\)</span>:</p>
-<ul class="simple">
-<li><p>Compute <span class="math notranslate nohighlight">\(f(t_n, y_n)\)</span></p></li>
-<li><p>Update: <span class="math notranslate nohighlight">\(y_{n+1} = y_n + h \cdot f(t_n, y_n)\)</span></p></li>
-<li><p>Update: <span class="math notranslate nohighlight">\(t_{n+1} = t_n + h\)</span></p></li>
-</ul>
-</li>
-</ol>
-</section>
-<section id="properties">
-<h2>Properties<a class="headerlink" href="#properties" title="Link to this heading">#</a></h2>
-<section id="advantages">
-<h3>Advantages<a class="headerlink" href="#advantages" title="Link to this heading">#</a></h3>
-<ul class="simple">
-<li><p><strong>Simple implementation:</strong> Only requires one function evaluation per step</p></li>
-<li><p><strong>Low computational cost:</strong> Minimal memory and processing requirements</p></li>
-<li><p><strong>Easy to understand:</strong> Straightforward mathematical concept</p></li>
-</ul>
-</section>
-<section id="disadvantages">
-<h3>Disadvantages<a class="headerlink" href="#disadvantages" title="Link to this heading">#</a></h3>
-<ul class="simple">
-<li><p><strong>Low accuracy:</strong> First-order method (error proportional to <span class="math notranslate nohighlight">\(h\)</span>)</p></li>
-<li><p><strong>Stability issues:</strong> Can become unstable for large step sizes</p></li>
-<li><p><strong>Conditional stability:</strong> Step size must be small enough to maintain stability</p></li>
-</ul>
-</section>
-</section>
-<section id="implementation-in-myasc-ode">
-<h2>Implementation in myASC-ODE<a class="headerlink" href="#implementation-in-myasc-ode" title="Link to this heading">#</a></h2>
-<p><em>[Add specific details about how to use the ExplicitEuler class in your library]</em></p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// Example usage (to be filled in with actual API)</span>
-<span class="n">ExplicitEuler</span><span class="w"> </span><span class="n">solver</span><span class="p">;</span>
-<span class="c1">// Implementation details here</span>
-</pre></div>
-</div>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h2>
-</section>
-<section id="when-to-use">
-<h2>When to Use<a class="headerlink" href="#when-to-use" title="Link to this heading">#</a></h2>
-<p>The Explicit Euler method is best suited for:</p>
-<ul class="simple">
-<li><p>Educational purposes and understanding basic numerical methods</p></li>
-<li><p>Simple problems with smooth solutions</p></li>
-<li><p>Cases where computational resources are extremely limited</p></li>
-<li><p>Initial prototyping before implementing more sophisticated methods</p></li>
-</ul>
-<p>For production use, consider higher-order methods like Improved Euler or Runge-Kutta methods for better accuracy.</p>
 </section>
 </section>
 
@@ -503,15 +438,6 @@ $<span class="math notranslate nohighlight">\(y_{n+1} = y_n + h \cdot f(t_n, y_n
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mathematical-formulation">Mathematical Formulation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#algorithm">Algorithm</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#properties">Properties</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#advantages">Advantages</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#disadvantages">Disadvantages</a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#implementation-in-myasc-ode">Implementation in myASC-ODE</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-use">When to Use</a></li>
 </ul>
   </nav></div>
 
