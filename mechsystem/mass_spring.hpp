@@ -37,6 +37,7 @@ public:
   size_t nr;
 };
 
+
 std::ostream & operator<< (std::ostream & ost, const Connector & con)
 {
   ost << "type = " << int(con.type) << ", nr = " << con.nr;
@@ -51,12 +52,20 @@ public:
   std::array<Connector,2> connectors;
 };
 
+class Joint 
+{
+public:
+  double length;
+  std::array<Connector,2> connectors;
+};
+
 template <int D>
 class MassSpringSystem
 {
   std::vector<Fix<D>> m_fixes;
   std::vector<Mass<D>> m_masses;
   std::vector<Spring> m_springs;
+  std::vector<Joint> m_joints;
   Vec<D> m_gravity=0.0;
 public:
   void setGravity (Vec<D> gravity) { m_gravity = gravity; }
@@ -79,10 +88,16 @@ public:
     m_springs.push_back (s); 
     return m_springs.size()-1;
   }
+  size_t addJoint (Joint j) 
+  {
+    m_joints.push_back (j); 
+    return m_joints.size()-1;
+  }
 
   auto & fixes() { return m_fixes; } 
   auto & masses() { return m_masses; } 
   auto & springs() { return m_springs; }
+  auto & joints() { return m_joints; }
 
   void getState (VectorView<> values, VectorView<> dvalues, VectorView<> ddvalues)
   {
@@ -140,43 +155,65 @@ public:
   MSS_Function (MassSpringSystem<D> & _mss)
     : mss(_mss) { }
 
-  virtual size_t dimX() const override { return D*mss.masses().size(); }
-  virtual size_t dimF() const override{ return D*mss.masses().size(); }
+  virtual size_t dimX() const override { return D*mss.masses().size() + mss.joints().size(); }
+  virtual size_t dimF() const override{ return D*mss.masses().size() +  mss.joints().size(); }
 
   virtual void evaluate (VectorView<double> x, VectorView<double> f) const override
   {
     f = 0.0;
 
-    auto xmat = x.asMatrix(mss.masses().size(), D);
-    auto fmat = f.asMatrix(mss.masses().size(), D);
+    // auto xmat = x.asMatrix(mss.masses().size(), D);
+    // auto fmat = f.asMatrix(mss.masses().size(), D);
 
+    // gravity force
     for (size_t i = 0; i < mss.masses().size(); i++)
-      fmat.row(i) = mss.masses()[i].mass*mss.getGravity();
+      for (size_t j =0; j < D; j++)
+        f(D*i+j) = mss.masses()[i].mass*mss.getGravity()(j);
 
-    for (auto spring : mss.springs())
-      {
-        auto [c1,c2] = spring.connectors;
-        Vec<D> p1, p2;
-        if (c1.type == Connector::FIX)
-          p1 = mss.fixes()[c1.nr].pos;
-        else
-          p1 = xmat.row(c1.nr);
-        if (c2.type == Connector::FIX)
-          p2 = mss.fixes()[c2.nr].pos;
-        else
-          p2 = xmat.row(c2.nr);
+    // for (auto spring : mss.springs())
+    //   {
+    //     auto [c1,c2] = spring.connectors;
+    //     Vec<D> p1, p2;
+    //     if (c1.type == Connector::FIX)
+    //       p1 = mss.fixes()[c1.nr].pos;
+    //     else
+    //       p1 = x(c1.nr);
+    //     if (c2.type == Connector::FIX)
+    //       p2 = mss.fixes()[c2.nr].pos;
+    //     else
+    //       p2 = x(c2.nr);
 
-        double force = spring.stiffness * (norm(p1-p2)-spring.length);
-        Vec<D> dir12 = 1.0/norm(p1-p2) * (p2-p1);
-        if (c1.type == Connector::MASS)
-          fmat.row(c1.nr) += force*dir12;
-        if (c2.type == Connector::MASS)
-          fmat.row(c2.nr) -= force*dir12;
-      }
+    //     double force = spring.stiffness * (norm(p1-p2)-spring.length);
+    //     Vec<D> dir12 = 1.0/norm(p1-p2) * (p2-p1);
+    //     if (c1.type == Connector::MASS)
+    //       f(c1.nr) += force*dir12;
+    //     if (c2.type == Connector::MASS)
+    //       f(c2.nr) -= force*dir12;
+    //   }
 
-    for (size_t i = 0; i < mss.masses().size(); i++)
-      fmat.row(i) *= 1.0/mss.masses()[i].mass;
-  }
+    // for (size_t i = 0; i < mss.masses().size(); i++)
+    //   f(i) *= 1.0/mss.masses()[i].mass;
+
+
+    // d/dx <lambda, g(x)>
+    for (size_t i = 0; i <mss.joints().size(); i++)
+       for (size_t j =0; j < D; j++)
+          f(D*i+j) += 2*(mss.masses()[i].pos(j) - x(D*i+j))*x(D*mss.masses().size()+i);
+
+
+    // length constraints
+    for (size_t i = 0; i < mss.joints().size(); i++){
+        for (size_t k = 0; k < D; k++)
+          {
+            auto idx_0 = mss.joints()[i].connectors[0].nr;
+            if (mss.joints()[i].connectors[0].type == Connector::FIX)
+              f(D*mss.masses().size()+i) += std::pow(x(i*D+k) - mss.fixes()[idx_0].pos(k), 2);
+            else
+              f(D*mss.masses().size()+i) += std::pow(x(i*D+k) - mss.masses()[idx_0].pos(k), 2);
+          }
+        f(D*mss.masses().size()+i) -= std::pow(mss.joints()[i].length, 2);
+    }
+    }
   
   virtual void evaluateDeriv (VectorView<double> x, MatrixView<double> df) const override
   {

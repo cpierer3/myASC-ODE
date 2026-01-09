@@ -38,9 +38,9 @@ PYBIND11_MODULE(mass_spring, m) {
                              [](Mass<3> & m) { return m.pos.data(); });
     ;
 
-    m.def("Mass", [](double m, std::array<double,3> p)
+    m.def("Mass", [](double m, std::array<double,3> p, std::array<double,3> v)
     {
-      return Mass<3>{m, { p[0], p[1], p[2] }};
+      return Mass<3>{m, { p[0], p[1], p[2] }, { v[0], v[1], v[2] }};
     });
 
 
@@ -73,6 +73,12 @@ PYBIND11_MODULE(mass_spring, m) {
                              [](Spring & s) { return s.connectors; })
       ;
 
+    py::class_<Joint> (m, "Joint")
+        .def(py::init<double, std::array<Connector,2>>())
+        .def_property_readonly("connectors",
+                               [](Joint & j) { return j.connectors; })
+        ;
+
     
     py::bind_vector<std::vector<Mass<3>>>(m, "Masses3d");
     py::bind_vector<std::vector<Fix<3>>>(m, "Fixes3d");
@@ -97,9 +103,11 @@ PYBIND11_MODULE(mass_spring, m) {
       .def("add", [](MassSpringSystem<3> & mss, Mass<3> m) { return mss.addMass(m); })
       .def("add", [](MassSpringSystem<3> & mss, Fix<3> f) { return mss.addFix(f); })
       .def("add", [](MassSpringSystem<3> & mss, Spring s) { return mss.addSpring(s); })
+      .def("add", [](MassSpringSystem<3> & mss, Joint j) { return mss.addJoint(j); })
       .def_property_readonly("masses", [](MassSpringSystem<3> & mss) -> auto& { return mss.masses(); })
       .def_property_readonly("fixes", [](MassSpringSystem<3> & mss) -> auto& { return mss.fixes(); })
       .def_property_readonly("springs", [](MassSpringSystem<3> & mss) -> auto& { return mss.springs(); })
+      .def_property_readonly("joints", [](MassSpringSystem<3> & mss) -> auto& { return mss.joints(); })
       .def("__getitem__", [](MassSpringSystem<3> mss, Connector & c) {
         if (c.type==Connector::FIX) return py::cast(mss.fixes()[c.nr]);
         else return py::cast(mss.masses()[c.nr]);
@@ -113,14 +121,23 @@ PYBIND11_MODULE(mass_spring, m) {
         return std::vector<double>(x);
       })
 
+      // call solver
       .def("simulate", [](MassSpringSystem<3> & mss, double tend, size_t steps) {
-        Vector<> x(3*mss.masses().size());
-        Vector<> dx(3*mss.masses().size());
-        Vector<> ddx(3*mss.masses().size());
+        Vector<> x(3*mss.masses().size()+ mss.joints().size());
+        Vector<> dx(3*mss.masses().size()+ mss.joints().size());
+        Vector<> ddx(3*mss.masses().size()+ mss.joints().size());
         mss.getState (x, dx, ddx);
 
+        Vector<double> temp (mss.masses().size()*3 + mss.joints().size());
+        temp = 0.0;
+        for (size_t i = 0; i < mss.masses().size(); i++){
+            temp(3*i) = mss.masses()[i].mass;
+            temp(3*i+1) = mss.masses()[i].mass;
+            temp(3*i+2) = mss.masses()[i].mass;
+        }
+
         auto mss_func = std::make_shared<MSS_Function<3>> (mss);
-        auto mass = std::make_shared<IdentityFunction> (x.size());
+        auto mass = std::make_shared<DiagMatrixFunction> (temp);
 
         SolveODE_Alpha(tend, steps, 0.8, x, dx, ddx, mss_func, mass);
 

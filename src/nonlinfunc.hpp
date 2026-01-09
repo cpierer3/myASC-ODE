@@ -41,7 +41,28 @@ namespace ASC_ode
     }
   };
 
+  class DiagMatrixFunction : public NonlinearFunction
+  {
+    Vector<> m_val;
+  public:
+    DiagMatrixFunction(VectorView<double> val) : m_val(val) { }
 
+    size_t dimX() const override { return m_val.size(); }
+    size_t dimF() const override { return m_val.size(); }
+    void evaluate (VectorView<double> x, VectorView<double> f) const override
+    {
+      f = 0.0;
+      for (size_t i = 0; i < m_val.size(); i++)
+        f(i) = m_val(i) * x(i);
+    }
+
+    void evaluateDeriv (VectorView<double> x, MatrixView<double> df) const override
+    {
+      df = 0.0;
+      for (size_t i = 0; i < m_val.size(); i++)
+        df(i,i) = m_val(i);
+    }
+  };
 
   class ConstantFunction : public NonlinearFunction
   {
