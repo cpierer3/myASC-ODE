@@ -43,6 +43,10 @@ PYBIND11_MODULE(mass_spring, m) {
       return Mass<3>{m, { p[0], p[1], p[2] }, { v[0], v[1], v[2] }};
     });
 
+    m.def("Mass", [](double m, std::array<double,3> p, std::array<double,3> v)
+    {
+      return Mass<3>{m, { p[0], p[1], p[2] }, { v[0], v[1], v[2] }};
+    });
 
 
     py::class_<Fix<2>> (m, "Fix2d")
@@ -129,7 +133,7 @@ PYBIND11_MODULE(mass_spring, m) {
         mss.getState (x, dx, ddx);
 
         Vector<double> temp (mss.masses().size()*3 + mss.joints().size());
-        temp = 0.0;
+        temp = 1e-12; // Small regularization for Lagrange multipliers (lower = more accurate constraints)
         for (size_t i = 0; i < mss.masses().size(); i++){
             temp(3*i) = mss.masses()[i].mass;
             temp(3*i+1) = mss.masses()[i].mass;
@@ -143,8 +147,82 @@ PYBIND11_MODULE(mass_spring, m) {
 
         mss.setState (x, dx, ddx);  
     });
+    // .def("updateLengthConstraints", [](MassSpringSystem<3> & mss, Vector<> & f, const Vector<> & x) {
+    //     const size_t D = 3;
+    //     // length constraints
+    //     for (size_t i = 0; i < mss.joints().size(); i++){
+    //         for (size_t k = 0; k < D; k++)
+    //           {
+    //             auto idx_0 = mss.joints()[i].connectors[0].nr;
+    //             if (mss.joints()[i].connectors[0].type == Connector::FIX)
+    //               f(D*mss.masses().size()+i) += std::pow(x(i*D+k) - mss.fixes()[idx_0].pos(k), 2);
+    //             else
+    //               f(D*mss.masses().size()+i) += std::pow(x(i*D+k) - mss.masses()[idx_0].pos(k), 2);
+    //           }
+    //         f(D*mss.masses().size()+i) -= std::pow(mss.joints()[i].length, 2);
+    //     }
+    //     // d/dx <lambda, g(x)>
+    //     for (size_t i = 0; i <mss.joints().size(); i++)
+    //        for (size_t j =0; j < D; j++)
+    //           f(D*i+j) += 2*(mss.masses()[i].pos(j) - x(D*i+j))*x(D*mss.masses().size()+i);
+        
+    //     // d/dx <lambda, g(x)> = lambda * gradient of constraint
+    //     // For constraint g = |p1-p2|^2 - L^2, gradient is 2*(p1-p2)
+    //     for (size_t i = 0; i < mss.joints().size(); i++)
+    //     {
+    //         double lambda = x(D*mss.masses().size()+i);  // Extract lambda from x
+    //         auto [c1, c2] = mss.joints()[i].connectors;
+            
+    //         // Extract positions from x vector (not stored positions!)
+    //         Vec<D> p1, p2;
+    //         if (c1.type == Connector::FIX)
+    //             p1 = mss.fixes()[c1.nr].pos;
+    //         else
+    //             for (size_t j = 0; j < D; j++)
+    //                 p1(j) = x(D*c1.nr+j);  // From x vector at mass c1.nr
+                    
+    //         if (c2.type == Connector::FIX)
+    //             p2 = mss.fixes()[c2.nr].pos;
+    //         else
+    //             for (size_t j = 0; j < D; j++)
+    //                 p2(j) = x(D*c2.nr+j);  // From x vector at mass c2.nr
+        
+    //         // Apply constraint forces: f += lambda * gradient_of_g
+    //         // gradient_of_g w.r.t p1 is 2*(p1-p2), w.r.t p2 is 2*(p2-p1)
+    //         if (c1.type == Connector::MASS)
+    //             for (size_t j = 0; j < D; j++)
+    //                 f(D*c1.nr+j) += 2*lambda*(p1(j) - p2(j));
+                    
+    //         if (c2.type == Connector::MASS)
+    //             for (size_t j = 0; j < D; j++)
+    //                 f(D*c2.nr+j) += 2*lambda*(p2(j) - p1(j));
+    //     }
 
-
-  
-    
+    //     // Constraint equations: g(x) = |p1-p2|^2 - L^2 = 0
+    //     for (size_t i = 0; i < mss.joints().size(); i++)
+    //     {
+    //         auto [c1, c2] = mss.joints()[i].connectors;
+            
+    //         // Extract BOTH connector positions from x vector
+    //         Vec<D> p1, p2;
+    //         if (c1.type == Connector::FIX)
+    //             p1 = mss.fixes()[c1.nr].pos;
+    //         else
+    //             for (size_t j = 0; j < D; j++)
+    //                 p1(j) = x(D*c1.nr+j);  // Mass position from x
+                    
+    //         if (c2.type == Connector::FIX)
+    //             p2 = mss.fixes()[c2.nr].pos;
+    //         else
+    //             for (size_t j = 0; j < D; j++)
+    //                 p2(j) = x(D*c2.nr+j);  // Mass position from x
+        
+    //         // Compute constraint: distance^2 - length^2
+    //         double dist_sq = 0;
+    //         for (size_t k = 0; k < D; k++)
+    //             dist_sq += std::pow(p1(k) - p2(k), 2);
+                
+    //         f(D*mss.masses().size()+i) = dist_sq - std::pow(mss.joints()[i].length, 2);
+    //     }
+    // });
 }

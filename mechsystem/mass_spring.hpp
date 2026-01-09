@@ -111,6 +111,14 @@ public:
         dvalmat.row(i) = m_masses[i].vel;
         ddvalmat.row(i) = m_masses[i].acc;
       }
+    
+    // Initialize Lagrange multipliers (if vector is large enough)
+    for (size_t i = D*m_masses.size(); i < values.size(); i++)
+    {
+      values(i) = 0.0;
+      dvalues(i) = 0.0;
+      ddvalues(i) = 0.0;
+    }
   }
 
   void setState (VectorView<> values, VectorView<> dvalues, VectorView<> ddvalues)
@@ -196,22 +204,64 @@ public:
 
 
     // d/dx <lambda, g(x)>
-    for (size_t i = 0; i <mss.joints().size(); i++)
-       for (size_t j =0; j < D; j++)
-          f(D*i+j) += 2*(mss.masses()[i].pos(j) - x(D*i+j))*x(D*mss.masses().size()+i);
+    // Force from constraint: F = -lambda * gradient_of_constraint (to pull back when violated)
+    // For g = |p1-p2|^2 - L^2, gradient w.r.t p1 is 2*(p1-p2), w.r.t p2 is 2*(p2-p1)
+    // We negate to get restoring force
+    for (size_t i = 0; i < mss.joints().size(); i++)
+    {
+        double lambda = x(D*mss.masses().size()+i);
+        auto [c1, c2] = mss.joints()[i].connectors;
+        
+        // Extract positions from x vector (current Newton iteration)
+        Vec<D> p1, p2;
+        if (c1.type == Connector::FIX)
+            p1 = mss.fixes()[c1.nr].pos;
+        else
+            for (size_t j = 0; j < D; j++)
+                p1(j) = x(D*c1.nr+j);
+                
+        if (c2.type == Connector::FIX)
+            p2 = mss.fixes()[c2.nr].pos;
+        else
+            for (size_t j = 0; j < D; j++)
+                p2(j) = x(D*c2.nr+j);
+        
+        // Apply constraint forces to both connectors (negated gradient)
+        if (c1.type == Connector::MASS)
+            for (size_t j = 0; j < D; j++)
+                f(D*c1.nr+j) -= 2*lambda*(p1(j) - p2(j));
+                
+        if (c2.type == Connector::MASS)
+            for (size_t j = 0; j < D; j++)
+                f(D*c2.nr+j) -= 2*lambda*(p2(j) - p1(j));
+    }
 
 
-    // length constraints
-    for (size_t i = 0; i < mss.joints().size(); i++){
+    // length constraints: g(x) = |p1 - p2|^2 - L^2 = 0
+    for (size_t i = 0; i < mss.joints().size(); i++)
+    {
+        auto [c1, c2] = mss.joints()[i].connectors;
+        
+        // Extract positions of both connectors from x vector
+        Vec<D> p1, p2;
+        if (c1.type == Connector::FIX)
+            p1 = mss.fixes()[c1.nr].pos;
+        else
+            for (size_t j = 0; j < D; j++)
+                p1(j) = x(D*c1.nr+j);
+                
+        if (c2.type == Connector::FIX)
+            p2 = mss.fixes()[c2.nr].pos;
+        else
+            for (size_t j = 0; j < D; j++)
+                p2(j) = x(D*c2.nr+j);
+        
+        // Compute squared distance between connectors
+        double dist_sq = 0;
         for (size_t k = 0; k < D; k++)
-          {
-            auto idx_0 = mss.joints()[i].connectors[0].nr;
-            if (mss.joints()[i].connectors[0].type == Connector::FIX)
-              f(D*mss.masses().size()+i) += std::pow(x(i*D+k) - mss.fixes()[idx_0].pos(k), 2);
-            else
-              f(D*mss.masses().size()+i) += std::pow(x(i*D+k) - mss.masses()[idx_0].pos(k), 2);
-          }
-        f(D*mss.masses().size()+i) -= std::pow(mss.joints()[i].length, 2);
+            dist_sq += std::pow(p1(k) - p2(k), 2);
+            
+        f(D*mss.masses().size()+i) = dist_sq - std::pow(mss.joints()[i].length, 2);
     }
     }
   
