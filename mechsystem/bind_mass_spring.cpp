@@ -82,7 +82,8 @@ PYBIND11_MODULE(mass_spring, m) {
     
     py::bind_vector<std::vector<Mass<3>>>(m, "Masses3d");
     py::bind_vector<std::vector<Fix<3>>>(m, "Fixes3d");
-    py::bind_vector<std::vector<Spring>>(m, "Springs");        
+    py::bind_vector<std::vector<Spring>>(m, "Springs");
+    py::bind_vector<std::vector<Joint>>(m, "Joints");       
     
     
     py::class_<MassSpringSystem<2>> (m, "MassSpringSystem2d")
@@ -114,35 +115,30 @@ PYBIND11_MODULE(mass_spring, m) {
       })
       
       .def("getState", [] (MassSpringSystem<3> & mss) {
-        Vector<> x(3*mss.masses().size());
-        Vector<> dx(3*mss.masses().size());
-        Vector<> ddx(3*mss.masses().size());
+        Vector<> x(3*mss.masses().size() + mss.joints().size());
+        Vector<> dx(3*mss.masses().size() + mss.joints().size());
+        Vector<> ddx(3*mss.masses().size() + mss.joints().size());
         mss.getState (x, dx, ddx);
         return std::vector<double>(x);
       })
-
+      
       // call solver
       .def("simulate", [](MassSpringSystem<3> & mss, double tend, size_t steps) {
-        Vector<> x(3*mss.masses().size()+ mss.joints().size());
-        Vector<> dx(3*mss.masses().size()+ mss.joints().size());
-        Vector<> ddx(3*mss.masses().size()+ mss.joints().size());
+        const size_t m = mss.masses().size();
+        const size_t j = mss.joints().size();
+
+        Vector<> x(3*m + j);
+        Vector<> dx(3*m + j);
+        Vector<> ddx(3*m + j);
         mss.getState (x, dx, ddx);
 
-        Vector<double> temp (mss.masses().size()*3 + mss.joints().size());
-        temp = 0.0;
-        for (size_t i = 0; i < mss.masses().size(); i++){
-            temp(3*i) = mss.masses()[i].mass;
-            temp(3*i+1) = mss.masses()[i].mass;
-            temp(3*i+2) = mss.masses()[i].mass;
-        }
-
         auto mss_func = std::make_shared<MSS_Function<3>> (mss);
-        auto mass = std::make_shared<DiagMatrixFunction> (temp);
-
+        auto mass = std::make_shared<Projector> (x.size(), 0, mss.masses().size()*3);
+      
         SolveODE_Alpha(tend, steps, 0.8, x, dx, ddx, mss_func, mass);
 
-        mss.setState (x, dx, ddx);  
-    });
+        mss.setState (x, dx, ddx);
+      });
 
 
   

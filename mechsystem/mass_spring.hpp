@@ -143,6 +143,13 @@ std::ostream & operator<< (std::ostream & ost, MassSpringSystem<D> & mss)
   for (auto sp : mss.springs())
     ost << "length = " << sp.length << ", stiffness = " << sp.stiffness
         << ", C1 = " << sp.connectors[0] << ", C2 = " << sp.connectors[1] << std::endl;
+
+
+  ost << "joints: " << std::endl;
+  for (auto j : mss.joints())
+    ost << "length = " << j.length
+        << ", C1 = " << j.connectors[0] << ", C2 = " << j.connectors[1] << std::endl;
+  
   return ost;
 }
 
@@ -162,58 +169,83 @@ public:
   {
     f = 0.0;
 
-    // auto xmat = x.asMatrix(mss.masses().size(), D);
-    // auto fmat = f.asMatrix(mss.masses().size(), D);
+    int lamdacounter = mss.joints().size();
+
+    auto xmat = x.asMatrix(mss.masses().size(), D);
+    auto xlambda = x.range(D*mss.masses().size(), lamdacounter);
+    auto fmat = f.asMatrix(mss.masses().size(), D);
+    auto flambda = f.range(D*mss.masses().size(), lamdacounter);
 
     // gravity force
     for (size_t i = 0; i < mss.masses().size(); i++)
-      for (size_t j =0; j < D; j++)
-        f(D*i+j) = mss.masses()[i].mass*mss.getGravity()(j);
+        fmat.row(i) = mss.masses()[i].mass*mss.getGravity();
 
-    // for (auto spring : mss.springs())
-    //   {
-    //     auto [c1,c2] = spring.connectors;
-    //     Vec<D> p1, p2;
-    //     if (c1.type == Connector::FIX)
-    //       p1 = mss.fixes()[c1.nr].pos;
-    //     else
-    //       p1 = x(c1.nr);
-    //     if (c2.type == Connector::FIX)
-    //       p2 = mss.fixes()[c2.nr].pos;
-    //     else
-    //       p2 = x(c2.nr);
+    // spring forces
+    for (auto spring : mss.springs())
+      {
+        auto [c1, c2] = spring.connectors;
+        Vec<D> p1, p2;
+        if (c1.type == Connector::FIX)
+          p1 = mss.fixes()[c1.nr].pos;
+        else
+          p1 = xmat.row(c1.nr);
+        if (c2.type == Connector::FIX)
+          p2 = mss.fixes()[c2.nr].pos;
+        else
+          p2 = xmat.row(c2.nr);
 
-    //     double force = spring.stiffness * (norm(p1-p2)-spring.length);
-    //     Vec<D> dir12 = 1.0/norm(p1-p2) * (p2-p1);
-    //     if (c1.type == Connector::MASS)
-    //       f(c1.nr) += force*dir12;
-    //     if (c2.type == Connector::MASS)
-    //       f(c2.nr) -= force*dir12;
-    //   }
+        double force = spring.stiffness * (norm(p1-p2)-spring.length);
+        Vec<D> dir12 = 1.0/norm(p1-p2) * (p2-p1);
+        if (c1.type == Connector::MASS)
+          fmat.row(c1.nr) += force*dir12;
+        if (c2.type == Connector::MASS)
+          fmat.row(c2.nr) -= force*dir12;
+      }
 
-    // for (size_t i = 0; i < mss.masses().size(); i++)
-    //   f(i) *= 1.0/mss.masses()[i].mass;
+      // joint part
+      for (size_t i=0; i<lamdacounter; i ++)
+      {
+        Joint joint = mss.joints()[i];
+        auto [c1, c2] = joint.connectors;
+        Vec<D> p1, p2;
+        if (c1.type == Connector::FIX && c2.type == Connector::FIX)
+          throw std::invalid_argument("Both connectors of a joint cannot be fixed.");
 
+        if (c1.type == Connector::FIX)
+          p1 = mss.fixes()[c1.nr].pos;
+        else
+          p1 = xmat.row(c1.nr);
+        if (c2.type == Connector::FIX)
+          p2 = mss.fixes()[c2.nr].pos;
+        else
+          p2 = xmat.row(c2.nr);
 
-    // d/dx <lambda, g(x)>
-    for (size_t i = 0; i <mss.joints().size(); i++)
-       for (size_t j =0; j < D; j++)
-          f(D*i+j) += 2*(mss.masses()[i].pos(j) - x(D*i+j))*x(D*mss.masses().size()+i);
+          // d/dx <g, lamda>
+        auto force = 2*xlambda(i)*(p1 - p2);
+        if (c1.type == Connector::MASS)
+          fmat.row(c1.nr) += force;
+        if (c2.type == Connector::MASS)
+          fmat.row(c2.nr) -= force;
 
+          // constraint equation
+        auto temp = 0.0;
+        for (size_t k=0; k<D; k++)
+          temp += (p1(k) - p2(k))*(p1(k) - p2(k));
+      
+        flambda(i)= temp - joint.length*joint.length;
 
-    // length constraints
-    for (size_t i = 0; i < mss.joints().size(); i++){
-        for (size_t k = 0; k < D; k++)
-          {
-            auto idx_0 = mss.joints()[i].connectors[0].nr;
-            if (mss.joints()[i].connectors[0].type == Connector::FIX)
-              f(D*mss.masses().size()+i) += std::pow(x(i*D+k) - mss.fixes()[idx_0].pos(k), 2);
-            else
-              f(D*mss.masses().size()+i) += std::pow(x(i*D+k) - mss.masses()[idx_0].pos(k), 2);
-          }
-        f(D*mss.masses().size()+i) -= std::pow(mss.joints()[i].length, 2);
     }
+
+    for (size_t i=0; i<mss.masses().size(); i++){
+      for (size_t j=0; j<D; j++) {
+        fmat(i,j) /= mss.masses()[i].mass;
+      }
     }
+  }
+
+  
+    
+
   
   virtual void evaluateDeriv (VectorView<double> x, MatrixView<double> df) const override
   {
