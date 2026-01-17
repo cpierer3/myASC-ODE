@@ -5,13 +5,5 @@ format: jb-book
 root: intro.md
 
 chapters:
-- file: explicit_euler
-- file: implicit_euler
-- file: improved_euler
-- file: crank_nicolson
-
-
-
-
-
-
+- file: general_intro
+- file: kreisel
