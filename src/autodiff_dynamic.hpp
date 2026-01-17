@@ -48,36 +48,132 @@ namespace ASC_ode {
 
     // --- Arithmetic Operators ---
 
+    template<typename T>
+    size_t get_dim(const AutoDiffDynamic<T> &a, const AutoDiffDynamic<T> &b) {
+      size_t da = a.dim();
+      size_t db = b.dim();
+      if (da > 0 && db > 0) {
+        assert(da == db && "AutoDiffDynamic dimension mismatch!");
+        return da;
+      }
+      return std::max(da, db);
+    }
+
     // ADDITION
     template<typename T>
     AutoDiffDynamic<T> operator+(const AutoDiffDynamic<T> &a, const AutoDiffDynamic<T> &b) {
-      // Assume gradients are same size.
-      // (In a robust system, you might handle empty gradients as constants here)
-      size_t n = a.dim();
-      assert(n == b.dim() && "AutoDiffDynamic dimension mismatch in +");
-
+      size_t n = get_dim(a, b);
       AutoDiffDynamic<T> result(a.value() + b.value(), n);
-      for (size_t i = 0; i < n; i++)
-        result.deriv()[i] = a.deriv()[i] + b.deriv()[i];
+
+      if (a.dim() > 0 && b.dim() > 0) {
+        for (size_t i = 0; i < n; i++) result.deriv()[i] = a.deriv()[i] + b.deriv()[i];
+      } else if (a.dim() > 0) {
+        for (size_t i = 0; i < n; i++) result.deriv()[i] = a.deriv()[i];
+      } else if (b.dim() > 0) {
+        for (size_t i = 0; i < n; i++) result.deriv()[i] = b.deriv()[i];
+      }
       return result;
     }
 
     template<typename T>
     AutoDiffDynamic<T> operator+(T a, const AutoDiffDynamic<T> &b) {
-      // Scalar + AutoDiffDynamic -> Result has b's dimension
       AutoDiffDynamic<T> result(a + b.value(), b.dim());
-      for (size_t i = 0; i < b.dim(); ++i)
-        result.deriv()[i] = b.deriv()[i]; // derivative of 'a' is 0
+      for (size_t i = 0; i < b.dim(); ++i) result.deriv()[i] = b.deriv()[i];
       return result;
     }
 
     template<typename T>
-    AutoDiffDynamic<T> operator+(const AutoDiffDynamic<T> &a, T b) { return b + a; } // Commutative
+    AutoDiffDynamic<T> operator+(const AutoDiffDynamic<T> &a, T b) { return b + a; }
+
+    // SUBTRACTION
+    template<typename T>
+    AutoDiffDynamic<T> operator-(const AutoDiffDynamic<T> &a, const AutoDiffDynamic<T> &b) {
+      size_t n = get_dim(a, b);
+      AutoDiffDynamic<T> result(a.value() - b.value(), n);
+
+      if (a.dim() > 0 && b.dim() > 0) {
+        for (size_t i = 0; i < n; i++) result.deriv()[i] = a.deriv()[i] - b.deriv()[i];
+      } else if (a.dim() > 0) {
+        // b is constant
+        for (size_t i = 0; i < n; i++) result.deriv()[i] = a.deriv()[i];
+      } else if (b.dim() > 0) {
+        // a is constant
+        for (size_t i = 0; i < n; i++) result.deriv()[i] = -b.deriv()[i];
+      }
+      return result;
+    }
+
+    template<typename T>
+    AutoDiffDynamic<T> operator-(T a, const AutoDiffDynamic<T> &b) {
+      AutoDiffDynamic<T> result(a - b.value(), b.dim());
+      for (size_t i = 0; i < b.dim(); ++i) result.deriv()[i] = -b.deriv()[i];
+      return result;
+    }
+
+    template<typename T>
+    AutoDiffDynamic<T> operator-(const AutoDiffDynamic<T> &a, T b) {
+      AutoDiffDynamic<T> result(a.value() - b, a.dim());
+      for (size_t i = 0; i < a.dim(); ++i) result.deriv()[i] = a.deriv()[i];
+      return result;
+    }
+
+    // MULTIPLICATION
+    template<typename T>
+    AutoDiffDynamic<T> operator*(const AutoDiffDynamic<T> &a, const AutoDiffDynamic<T> &b) {
+      size_t n = get_dim(a, b);
+      AutoDiffDynamic<T> result(a.value() * b.value(), n);
+
+      if (a.dim() > 0 && b.dim() > 0) {
+        for (size_t i = 0; i < n; i++)
+          result.deriv()[i] = a.deriv()[i] * b.value() + a.value() * b.deriv()[i];
+      } else if (a.dim() > 0) {
+        // b is constant
+        for (size_t i = 0; i < n; i++) result.deriv()[i] = a.deriv()[i] * b.value();
+      } else if (b.dim() > 0) {
+        // a is constant
+        for (size_t i = 0; i < n; i++) result.deriv()[i] = a.value() * b.deriv()[i];
+      }
+      return result;
+    }
+
+    template<typename T>
+    AutoDiffDynamic<T> operator*(T a, const AutoDiffDynamic<T> &b) {
+      AutoDiffDynamic<T> result(a * b.value(), b.dim());
+      for (size_t i = 0; i < b.dim(); ++i) result.deriv()[i] = a * b.deriv()[i];
+      return result;
+    }
+
+    template<typename T>
+    AutoDiffDynamic<T> operator*(const AutoDiffDynamic<T> &b, T a) {
+      return a * b;
+    }
+
+    // DIVISION
+    template<typename T>
+    AutoDiffDynamic<T> operator/(const AutoDiffDynamic<T> &a, const AutoDiffDynamic<T> &b) {
+      size_t n = get_dim(a, b);
+      AutoDiffDynamic<T> result(a.value() / b.value(), n);
+
+      if (a.dim() > 0 && b.dim() > 0) {
+        T b2 = b.value() * b.value();
+        for (size_t i = 0; i < n; i++)
+          result.deriv()[i] = (a.deriv()[i] * b.value() - a.value() * b.deriv()[i]) / b2;
+      } else if (a.dim() > 0) {
+        // b is constant: a' / b
+        T inv_b = 1.0 / b.value();
+        for (size_t i = 0; i < n; i++) result.deriv()[i] = a.deriv()[i] * inv_b;
+      } else if (b.dim() > 0) {
+        // a is constant: -a * b' / b^2
+        T factor = -a.value() / (b.value() * b.value());
+        for (size_t i = 0; i < n; i++) result.deriv()[i] = factor * b.deriv()[i];
+      }
+      return result;
+    }
 
 
     template<typename T>
     void operator+=(AutoDiffDynamic<T> &a,
-                                  const AutoDiffDynamic<T> &b
+                    const AutoDiffDynamic<T> &b
     ) {
       a = a + b;
     }
@@ -95,75 +191,6 @@ namespace ASC_ode {
     template<typename T>
     void operator-=(AutoDiffDynamic<T> &a, const T b) {
       a = a - b;
-    }
-
-// SUBTRACTION
-    template<typename T>
-    AutoDiffDynamic<T> operator-(const AutoDiffDynamic<T> &a, const AutoDiffDynamic<T> &b) {
-      size_t n = a.dim();
-      assert(n == b.dim() && "AutoDiffDynamic dimension mismatch in -");
-
-      AutoDiffDynamic<T> result(a.value() - b.value(), n);
-      for (size_t i = 0; i < n; i++)
-        result.deriv()[i] = a.deriv()[i] - b.deriv()[i];
-      return result;
-    }
-
-    template<typename T>
-    AutoDiffDynamic<T> operator-(T a, const AutoDiffDynamic<T> &b) {
-      AutoDiffDynamic<T> result(a - b.value(), b.dim());
-      for (size_t i = 0; i < b.dim(); ++i)
-        result.deriv()[i] = -b.deriv()[i];
-      return result;
-    }
-
-    template<typename T>
-    AutoDiffDynamic<T> operator-(const AutoDiffDynamic<T> &a, T b) {
-      AutoDiffDynamic<T> result(a.value() - b, a.dim());
-      for (size_t i = 0; i < a.dim(); ++i)
-        result.deriv()[i] = a.deriv()[i];
-      return result;
-    }
-
-// MULTIPLICATION
-    template<typename T>
-    AutoDiffDynamic<T> operator*(const AutoDiffDynamic<T> &a, const AutoDiffDynamic<T> &b) {
-      size_t n = a.dim();
-      assert(n == b.dim() && "AutoDiffDynamic dimension mismatch in *");
-
-      AutoDiffDynamic<T> result(a.value() * b.value(), n);
-      for (size_t i = 0; i < n; i++)
-        result.deriv()[i] = a.deriv()[i] * b.value() + a.value() * b.deriv()[i];
-      return result;
-    }
-
-    template<typename T>
-    AutoDiffDynamic<T> operator*(T a, const AutoDiffDynamic<T> &b) {
-      AutoDiffDynamic<T> result(a * b.value(), b.dim());
-      for (size_t i = 0; i < b.dim(); ++i)
-        result.deriv()[i] = a * b.deriv()[i];
-      return result;
-    }
-
-    template<typename T>
-    AutoDiffDynamic<T> operator*(const AutoDiffDynamic<T> &b, T a) {
-      AutoDiffDynamic<T> result(a * b.value(), b.dim());
-      for (size_t i = 0; i < b.dim(); ++i)
-        result.deriv()[i] = a * b.deriv()[i];
-      return result;
-    }
-
-// DIVISION
-    template<typename T>
-    AutoDiffDynamic<T> operator/(const AutoDiffDynamic<T> &a, const AutoDiffDynamic<T> &b) {
-      size_t n = a.dim();
-      assert(n == b.dim() && "AutoDiffDynamic dimension mismatch in /");
-
-      AutoDiffDynamic<T> result(a.value() / b.value(), n);
-      T b2 = b.value() * b.value();
-      for (size_t i = 0; i < n; i++)
-        result.deriv()[i] = (a.deriv()[i] * b.value() - a.value() * b.deriv()[i]) / b2;
-      return result;
     }
 
     template<typename T>
@@ -235,7 +262,7 @@ namespace ASC_ode {
 // Put this in ASC_ode namespace, ideally in autodiff_dynamic.hpp
     template<typename T>
     nanoblas::Vector<AutoDiffDynamic<T>>
-    operator*( const nanoblas::VecExpr<AutoDiffDynamic<T>> &v, const AutoDiffDynamic<T> &s) {
+    operator*(const nanoblas::VecExpr<AutoDiffDynamic<T>> &v, const AutoDiffDynamic<T> &s) {
       nanoblas::Vector<AutoDiffDynamic<T>> result(v.size());
       for (int i = 0; i < v.size(); i++) {
         result(i) = s * v(i); // Multiply scalar s with each component v(i)
@@ -246,7 +273,7 @@ namespace ASC_ode {
 // Put this in ASC_ode namespace, ideally in autodiff_dynamic.hpp
     template<typename T>
     nanoblas::Vector<AutoDiffDynamic<T>>
-    operator*(  const AutoDiffDynamic<T> &s, const nanoblas::VecExpr<AutoDiffDynamic<T>> &v) {
+    operator*(const AutoDiffDynamic<T> &s, const nanoblas::VecExpr<AutoDiffDynamic<T>> &v) {
       nanoblas::Vector<AutoDiffDynamic<T>> result(v.size());
       for (int i = 0; i < v.size(); i++) {
         result(i) = s * v(i); // Multiply scalar s with each component v(i)
@@ -254,33 +281,29 @@ namespace ASC_ode {
       return result;
     }
 
-      // Put this in ASC_ode namespace, ideally in autodiff_dynamic.hpp
-template <unsigned long int D, typename T>
-nanoblas::Vec<D, AutoDiffDynamic<T>> operator* (const AutoDiffDynamic<T> &s, const nanoblas::Vec<D, AutoDiffDynamic<T>> &v)
-{
-    nanoblas::Vec<D, AutoDiffDynamic<T>> result;
-    for (int i = 0; i < D; i++) {
+    // Put this in ASC_ode namespace, ideally in autodiff_dynamic.hpp
+    template<unsigned long int D, typename T>
+    nanoblas::Vec<D, AutoDiffDynamic<T>>
+    operator*(const AutoDiffDynamic<T> &s, const nanoblas::Vec<D, AutoDiffDynamic<T>> &v) {
+      nanoblas::Vec<D, AutoDiffDynamic<T>> result;
+      for (int i = 0; i < D; i++) {
         result(i) = s * v(i); // Multiply scalar s with each component v(i)
+      }
+      return result;
     }
-    return result;
-}
 
-    template <typename T>
-    AutoDiffDynamic<T> operator/ (double a, const AutoDiffDynamic<T> &b)
-    {
-      // Quotient rule: (a / b)' = (0 * b - a * b') / b^2  =  -a * b' / b^2
-
-      // 1. Calculate value: a / b.value()
+    template<typename T>
+    AutoDiffDynamic<T> operator/(double a, const AutoDiffDynamic<T> &b) {
       AutoDiffDynamic<T> result(a / b.value(), b.dim());
-
-      // 2. Precompute denominator squared
       double b_sq = b.value() * b.value();
-
-      // 3. Compute derivative: -a * b.deriv()[i] / b^2
       for (size_t i = 0; i < b.dim(); i++)
         result.deriv()[i] = -a * b.deriv()[i] / b_sq;
 
       return result;
     }
+
+
+    template <typename T>
+    AutoDiffDynamic<T> norm2 (AutoDiffDynamic<T> x) { return x*x; }
 }
 #endif
