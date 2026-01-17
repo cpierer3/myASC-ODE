@@ -111,14 +111,6 @@ public:
         dvalmat.row(i) = m_masses[i].vel;
         ddvalmat.row(i) = m_masses[i].acc;
       }
-    
-    // Initialize Lagrange multipliers (if vector is large enough)
-    for (size_t i = D*m_masses.size(); i < values.size(); i++)
-    {
-      values(i) = 0.0;
-      dvalues(i) = 0.0;
-      ddvalues(i) = 0.0;
-    }
   }
 
   void setState (VectorView<> values, VectorView<> dvalues, VectorView<> ddvalues)
@@ -151,6 +143,13 @@ std::ostream & operator<< (std::ostream & ost, MassSpringSystem<D> & mss)
   for (auto sp : mss.springs())
     ost << "length = " << sp.length << ", stiffness = " << sp.stiffness
         << ", C1 = " << sp.connectors[0] << ", C2 = " << sp.connectors[1] << std::endl;
+
+
+  ost << "joints: " << std::endl;
+  for (auto j : mss.joints())
+    ost << "length = " << j.length
+        << ", C1 = " << j.connectors[0] << ", C2 = " << j.connectors[1] << std::endl;
+
   return ost;
 }
 
@@ -170,101 +169,84 @@ public:
   {
     f = 0.0;
 
-    // auto xmat = x.asMatrix(mss.masses().size(), D);
-    // auto fmat = f.asMatrix(mss.masses().size(), D);
+    int lamdacounter = mss.joints().size();
+
+    auto xmat = x.asMatrix(mss.masses().size(), D);
+    auto xlambda = x.range(D*mss.masses().size(), lamdacounter);
+    auto fmat = f.asMatrix(mss.masses().size(), D);
+    auto flambda = f.range(D*mss.masses().size(), lamdacounter);
 
     // gravity force
     for (size_t i = 0; i < mss.masses().size(); i++)
-      for (size_t j =0; j < D; j++)
-        f(D*i+j) = mss.masses()[i].mass*mss.getGravity()(j);
+        fmat.row(i) = mss.masses()[i].mass*mss.getGravity();
 
-    // for (auto spring : mss.springs())
-    //   {
-    //     auto [c1,c2] = spring.connectors;
-    //     Vec<D> p1, p2;
-    //     if (c1.type == Connector::FIX)
-    //       p1 = mss.fixes()[c1.nr].pos;
-    //     else
-    //       p1 = x(c1.nr);
-    //     if (c2.type == Connector::FIX)
-    //       p2 = mss.fixes()[c2.nr].pos;
-    //     else
-    //       p2 = x(c2.nr);
-
-    //     double force = spring.stiffness * (norm(p1-p2)-spring.length);
-    //     Vec<D> dir12 = 1.0/norm(p1-p2) * (p2-p1);
-    //     if (c1.type == Connector::MASS)
-    //       f(c1.nr) += force*dir12;
-    //     if (c2.type == Connector::MASS)
-    //       f(c2.nr) -= force*dir12;
-    //   }
-
-    // for (size_t i = 0; i < mss.masses().size(); i++)
-    //   f(i) *= 1.0/mss.masses()[i].mass;
-
-
-    // d/dx <lambda, g(x)>
-    // Force from constraint: F = -lambda * gradient_of_constraint (to pull back when violated)
-    // For g = |p1-p2|^2 - L^2, gradient w.r.t p1 is 2*(p1-p2), w.r.t p2 is 2*(p2-p1)
-    // We negate to get restoring force
-    for (size_t i = 0; i < mss.joints().size(); i++)
-    {
-        double lambda = x(D*mss.masses().size()+i);
-        auto [c1, c2] = mss.joints()[i].connectors;
-        
-        // Extract positions from x vector (current Newton iteration)
+    // spring forces
+    for (auto spring : mss.springs())
+      {
+        auto [c1, c2] = spring.connectors;
         Vec<D> p1, p2;
         if (c1.type == Connector::FIX)
-            p1 = mss.fixes()[c1.nr].pos;
+          p1 = mss.fixes()[c1.nr].pos;
         else
-            for (size_t j = 0; j < D; j++)
-                p1(j) = x(D*c1.nr+j);
-                
+          p1 = xmat.row(c1.nr);
         if (c2.type == Connector::FIX)
-            p2 = mss.fixes()[c2.nr].pos;
+          p2 = mss.fixes()[c2.nr].pos;
         else
-            for (size_t j = 0; j < D; j++)
-                p2(j) = x(D*c2.nr+j);
-        
-        // Apply constraint forces to both connectors (negated gradient)
+          p2 = xmat.row(c2.nr);
+
+        double force = spring.stiffness * (norm(p1-p2)-spring.length);
+        Vec<D> dir12 = 1.0/norm(p1-p2) * (p2-p1);
         if (c1.type == Connector::MASS)
-            for (size_t j = 0; j < D; j++)
-                f(D*c1.nr+j) -= 2*lambda*(p1(j) - p2(j));
-                
+          fmat.row(c1.nr) += force*dir12;
         if (c2.type == Connector::MASS)
-            for (size_t j = 0; j < D; j++)
-                f(D*c2.nr+j) -= 2*lambda*(p2(j) - p1(j));
-    }
+          fmat.row(c2.nr) -= force*dir12;
+      }
 
-
-    // length constraints: g(x) = |p1 - p2|^2 - L^2 = 0
-    for (size_t i = 0; i < mss.joints().size(); i++)
-    {
-        auto [c1, c2] = mss.joints()[i].connectors;
-        
-        // Extract positions of both connectors from x vector
+      // joint part
+      for (size_t i=0; i<lamdacounter; i ++)
+      {
+        Joint joint = mss.joints()[i];
+        auto [c1, c2] = joint.connectors;
         Vec<D> p1, p2;
+        if (c1.type == Connector::FIX && c2.type == Connector::FIX)
+          throw std::invalid_argument("Both connectors of a joint cannot be fixed.");
+
         if (c1.type == Connector::FIX)
-            p1 = mss.fixes()[c1.nr].pos;
+          p1 = mss.fixes()[c1.nr].pos;
         else
-            for (size_t j = 0; j < D; j++)
-                p1(j) = x(D*c1.nr+j);
-                
+          p1 = xmat.row(c1.nr);
         if (c2.type == Connector::FIX)
-            p2 = mss.fixes()[c2.nr].pos;
+          p2 = mss.fixes()[c2.nr].pos;
         else
-            for (size_t j = 0; j < D; j++)
-                p2(j) = x(D*c2.nr+j);
-        
-        // Compute squared distance between connectors
-        double dist_sq = 0;
-        for (size_t k = 0; k < D; k++)
-            dist_sq += std::pow(p1(k) - p2(k), 2);
-            
-        f(D*mss.masses().size()+i) = dist_sq - std::pow(mss.joints()[i].length, 2);
+          p2 = xmat.row(c2.nr);
+
+          // d/dx <g, lamda>
+        auto force = 2*xlambda(i)*(p1 - p2);
+        if (c1.type == Connector::MASS)
+          fmat.row(c1.nr) += force;
+        if (c2.type == Connector::MASS)
+          fmat.row(c2.nr) -= force;
+
+          // constraint equation
+        auto temp = 0.0;
+        for (size_t k=0; k<D; k++)
+          temp += (p1(k) - p2(k))*(p1(k) - p2(k));
+
+        flambda(i)= temp - joint.length*joint.length;
+
     }
+
+    for (size_t i=0; i<mss.masses().size(); i++){
+      for (size_t j=0; j<D; j++) {
+        fmat(i,j) /= mss.masses()[i].mass;
+      }
     }
-  
+  }
+
+
+
+
+
   virtual void evaluateDeriv (VectorView<double> x, MatrixView<double> df) const override
   {
     // TODO: exact differentiation
