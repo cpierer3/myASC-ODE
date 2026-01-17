@@ -6,8 +6,8 @@ root: intro
 options:
   numbered: true
 chapters:
-- file: mass_spring_simulation
-  title: Mass-Spring Crane Simulation
-- file: kreisel_simulation
+- file: kreisel_system
   title: Kreisel System Simulation
+- file: mass_spring
+  title: Mass-Spring Crane Simulation
 

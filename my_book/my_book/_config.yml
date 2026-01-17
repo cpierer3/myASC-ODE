@@ -1,9 +1,4 @@
-# Book # Force re-execution of notebooks on each build.
-# See https://jupyterbook.org/content/execute.html
-execute:
-  execute_notebooks: cacheings
-# Learn more at https://jupyterbook.org/customize/config.html
-
+# Book settings
 title: myASC-ODE Simulation Framework
 author: Constantin Pierer, Jonas Gastecker, Lukas Lechner
 logo: logo.png
@@ -11,7 +6,8 @@ logo: logo.png
 # Force re-execution of notebooks on each build.
 # See https://jupyterbook.org/content/execute.html
 execute:
-  execute_notebooks: 'force'
+  execute_notebooks: cache
+  timeout: 120
 
 # Define the name of the latex output file for PDF builds
 latex:
