@@ -84,6 +84,7 @@ $$y_{n+1} = y_n + \frac{h}{2}[f(t_n, y_n) + f(t_{n+1}, y_{n+1})]$$
 - **Stability:** Unconditionally stable
 - **Computational cost:** Higher (requires solving nonlinear equations)
 
+![kreisel](pictures/kreisel.gif)
 
 
 
