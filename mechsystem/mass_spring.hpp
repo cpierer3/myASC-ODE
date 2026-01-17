@@ -199,10 +199,11 @@ public:
         else
           p2 = xmat.row(c2.nr);
 
-        T dist = norm(p1-p2);
+        Vec<D, T> p2MinusP1 = p2-p1;
+        T dist = norm(p2MinusP1);
+
         T force = spring.stiffness * (dist - spring.length);
-        Vec<D, T> p1MinusP2 = p1-p2;
-        Vec<D, T> dir12 = (1.0/dist) * p1MinusP2;
+        Vec<D, T> dir12 = (1.0/dist) * p2MinusP1;
 
         if (c1.type == Connector::MASS)
           fmat.row(c1.nr) += force*dir12;
