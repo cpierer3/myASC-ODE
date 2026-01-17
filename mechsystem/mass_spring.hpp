@@ -3,6 +3,7 @@
 
 #include <nonlinfunc.hpp>
 #include <timestepper.hpp>
+#include <autodiff_dynamic.hpp>
 
 using namespace ASC_ode;
 
@@ -165,8 +166,12 @@ public:
   virtual size_t dimX() const override { return D*mss.masses().size() + mss.joints().size(); }
   virtual size_t dimF() const override{ return D*mss.masses().size() +  mss.joints().size(); }
 
-  virtual void evaluate (VectorView<double> x, VectorView<double> f) const override
-  {
+  virtual void evaluate(VectorView<double> x, VectorView<double> f) const override {
+    evaluateGeneric(x, f);
+  }
+
+  template<typename T>
+  void evaluateGeneric(VectorView<T> x, VectorView<T> f) const {
     f = 0.0;
 
     int lamdacounter = mss.joints().size();
@@ -178,15 +183,15 @@ public:
 
     // gravity force
     for (size_t i = 0; i < mss.masses().size(); i++)
-        fmat.row(i) = mss.masses()[i].mass*mss.getGravity();
+      fmat.row(i) = mss.masses()[i].mass*mss.getGravity();
 
     // spring forces
     for (auto spring : mss.springs())
-      {
+    {
         auto [c1, c2] = spring.connectors;
-        Vec<D> p1, p2;
+        Vec<D, T> p1, p2;
         if (c1.type == Connector::FIX)
-          p1 = mss.fixes()[c1.nr].pos;
+          p1 = mss.fixes()[c1.nr].pos; // implicit cast double->T
         else
           p1 = xmat.row(c1.nr);
         if (c2.type == Connector::FIX)
@@ -194,8 +199,11 @@ public:
         else
           p2 = xmat.row(c2.nr);
 
-        double force = spring.stiffness * (norm(p1-p2)-spring.length);
-        Vec<D> dir12 = 1.0/norm(p1-p2) * (p2-p1);
+        T dist = norm(p1-p2);
+        T force = spring.stiffness * (dist - spring.length);
+        Vec<D, T> p1MinusP2 = p1-p2;
+        Vec<D, T> dir12 = (1.0/dist) * p1MinusP2;
+
         if (c1.type == Connector::MASS)
           fmat.row(c1.nr) += force*dir12;
         if (c2.type == Connector::MASS)
@@ -207,7 +215,7 @@ public:
       {
         Joint joint = mss.joints()[i];
         auto [c1, c2] = joint.connectors;
-        Vec<D> p1, p2;
+        Vec<D, T> p1, p2;
         if (c1.type == Connector::FIX && c2.type == Connector::FIX)
           throw std::invalid_argument("Both connectors of a joint cannot be fixed.");
 
@@ -220,50 +228,46 @@ public:
         else
           p2 = xmat.row(c2.nr);
 
-          // d/dx <g, lamda>
-        auto force = 2*xlambda(i)*(p1 - p2);
+        Vec<D, T> p1MinusP2 = p1-p2;
+        Vec<D, T> force_vec;
+        for (int j = 0; j < D; j++) {
+          force_vec(j) = p1MinusP2(j) * 2.0 * xlambda(i);
+        }
+
         if (c1.type == Connector::MASS)
-          fmat.row(c1.nr) += force;
+          fmat.row(c1.nr) += force_vec;
         if (c2.type == Connector::MASS)
-          fmat.row(c2.nr) -= force;
+          fmat.row(c2.nr) -= force_vec;
 
-          // constraint equation
-        auto temp = 0.0;
-        for (size_t k=0; k<D; k++)
-          temp += (p1(k) - p2(k))*(p1(k) - p2(k));
+        T temp = 0.0;
+        for (size_t k = 0; k < D; k++)
+          temp += (p1(k) - p2(k)) * (p1(k) - p2(k));
 
-        flambda(i)= temp - joint.length*joint.length;
+        flambda(i) = temp - joint.length * joint.length;
+      }
 
-    }
-
-    for (size_t i=0; i<mss.masses().size(); i++){
-      for (size_t j=0; j<D; j++) {
-        fmat(i,j) /= mss.masses()[i].mass;
+      for (size_t i = 0; i < mss.masses().size(); i++) {
+        for (size_t j = 0; j < D; j++) {
+          fmat(i, j) = fmat(i, j) / mss.masses()[i].mass;
+        }
       }
     }
-  }
 
-
-
-
-
-  virtual void evaluateDeriv (VectorView<double> x, MatrixView<double> df) const override
-  {
-    // TODO: exact differentiation
-    double eps = 1e-8;
-    Vector<> xl(dimX()), xr(dimX()), fl(dimF()), fr(dimF());
-    for (size_t i = 0; i < dimX(); i++)
-      {
-        xl = x;
-        xl(i) -= eps;
-        xr = x;
-        xr(i) += eps;
-        evaluate (xl, fl);
-        evaluate (xr, fr);
-        df.col(i) = 1/(2*eps) * (fr-fl);
+    virtual void evaluateDeriv(VectorView<double> x, MatrixView<double> df) const override {
+      Vector<AutoDiffDynamic<>> xs(x.size());
+      Vector<AutoDiffDynamic<>> fs(x.size());
+      for (int i = 0; i < x.size(); i++) {
+        xs(i) = AutoDiffDynamic(x(i), x.size()); // <--- FIX: Assign to index 'i'
+        xs(i).deriv()[i] = 1.0;
       }
-  }
-  
+      evaluateGeneric(xs, fs);
+      for (size_t r = 0; r < dimF(); r++) {
+        for (size_t c = 0; c < dimX(); c++) {
+          df(r, c) = fs[r].deriv()[c];
+        }
+      }
+    }
+
 };
 
 #endif
