@@ -32,7 +32,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
     <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css?v=6644e6bb" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
     <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
   
@@ -57,10 +57,12 @@
     <script async="async" src="_static/sphinx-thebe.js?v=c100c467"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'intro';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="1. Mass-Spring Crane Simulation" href="mass_spring.html" />
+    <link rel="next" title="1. Kreisel System Simulation" href="kreisel_system.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -181,8 +183,8 @@
             </li>
         </ul>
         <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="mass_spring.html">1. Mass-Spring Crane Simulation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="kreisel_system.html">2. Kreisel System Simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kreisel_system.html">1. Kreisel System Simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mass_spring.html">2. Mass-Spring Crane Simulation</a></li>
 </ul>
 
     </div>
@@ -379,7 +381,13 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#features">Features</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interactive-simulations">Interactive Simulations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interactive-simulations">Interactive Simulations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#solving-a-mass-spring-system-with-a-generalized-alpha-method">Solving a Mass Spring System with a generalized <span class="math notranslate nohighlight">\(\alpha\)</span> Method</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#systems-with-constraints">Systems with constraints</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
             </nav>
         </div>
@@ -397,9 +405,8 @@ document.write(`
 <section id="features">
 <h2>Features<a class="headerlink" href="#features" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><strong>Mass-Spring Systems</strong>: Comprehensive 3D mass-spring system simulations</p></li>
+<li><p><strong>Kreisel Systems</strong>: Simulating a spinning Kreisel</p></li>
 <li><p><strong>Crane Dynamics</strong>: Realistic crane structure modeling with vibration analysis</p></li>
-<li><p><strong>Kreisel Systems</strong>: Gyroscopic and rotational dynamics simulations</p></li>
 </ul>
 </section>
 <section id="interactive-simulations">
@@ -409,16 +416,79 @@ document.write(`
 <li><p>Real-time 3D visualizations</p></li>
 <li><p>Dynamic parameter adjustments</p></li>
 <li><p>Comprehensive analysis tools</p></li>
-<li><p>C++ and Python implementations</p></li>
 </ul>
-<p>Explore the interactive notebooks to see the simulations in action!</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="mass_spring.html">1. Mass-Spring Crane Simulation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="kreisel_system.html">2. Kreisel System Simulation</a></li>
-</ul>
-</div>
+<p>Only the user-friendly interface is implemented in Python; all performance-critical computations are handled by the underlying C++ framework.</p>
+<p>Explore the interactive notebooks to see the simulations in action! We will first briefly mention some of the theory behind the implemented methods.</p>
+<section id="solving-a-mass-spring-system-with-a-generalized-alpha-method">
+<h3>Solving a Mass Spring System with a generalized <span class="math notranslate nohighlight">\(\alpha\)</span> Method<a class="headerlink" href="#solving-a-mass-spring-system-with-a-generalized-alpha-method" title="Link to this heading">#</a></h3>
+<p>In an effort to avoid the instabilities that the Newmark method leads to for non linear ODEs, we can introduce the generalized <span class="math notranslate nohighlight">\(\alpha\)</span> method. We recall the Newmark scheme for a second order ODE</p>
+<div class="math notranslate nohighlight">
+\[
+M \ddot{x} = F(x)
+\]</div>
+<p>to be given as</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}
+\begin{aligned}
+x_{n+1} &amp;= x_n + \tau v_n + \tau^2 \left( \left( \tfrac{1}{2} - \beta \right) a_n + \beta a_{n+1} \right), \\
+v_{n+1} &amp;= v_n + \tau \left( (1-\gamma) a_n + \gamma a_{n+1} \right)
+\end{aligned}
+\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(v_n = \dot{x}_n\)</span> and <span class="math notranslate nohighlight">\(a_n = M^{-1} F(x_n)\)</span>.</p>
+<p>For a damping parameter <span class="math notranslate nohighlight">\(\rho^\infty\)</span>, we can introduce the new variables</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}
+\begin{aligned}
+\alpha_m &amp;= \frac{2 \rho^\infty - 1}{\rho^\infty + 1}, \\
+\alpha_f &amp;= \frac{\rho^\infty}{\rho^\infty + 1}
+\end{aligned}
+\end{split}\]</div>
+<p>and set</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}
+\begin{aligned}
+\beta &amp;= \frac{1}{4} (1 - \alpha_m + \alpha_f)^2, \\
+\gamma &amp;= \frac{1}{2} - \alpha_m + \alpha_f
+\end{aligned}
+\end{split}\]</div>
+<p>to get to the generalized <span class="math notranslate nohighlight">\(\alpha\)</span> method formulation</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}
+\begin{aligned}
+x_{n+1} &amp;= x_n + \tau v_n + \tau^2 \left( \left( \tfrac{1}{2} - \beta \right) a_n + \beta a_{n+1} \right), \\
+v_{n+1} &amp;= v_n + \tau \left( (1-\gamma) a_n + \gamma a_{n+1} \right), \\
+x_{n+1-\alpha_f} &amp;= (1-\alpha_f) x_{n+1} + \alpha_f x_n, \\
+a_{n+1-\alpha_m} &amp;= (1-\alpha_m) a_{n+1} + \alpha_m a_n
+\end{aligned}
+\end{split}\]</div>
+<section id="systems-with-constraints">
+<h4>Systems with constraints<a class="headerlink" href="#systems-with-constraints" title="Link to this heading">#</a></h4>
+<p>We want to implement a way to model joints between two masses. For this, we introduce systems with constraints. We define the Lagrange function for a constrained system as</p>
+<div class="math notranslate nohighlight">
+\[
+L(x, \lambda) = -U(x) + \langle \lambda, g(x) \rangle
+\]</div>
+<p>with</p>
+<div class="math notranslate nohighlight">
+\[
+U(x) = m g x_z, \qquad
+g(x) := \lVert x - x_0 \rVert^2 - l^2
+\]</div>
+<p>being the length constraint.</p>
+<p>This leads to the second order system of ODEs</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}
+\begin{aligned}
+m_i \ddot{x}_i &amp;= \frac{\partial}{\partial x_i} L(x, \lambda), \\
+0 &amp;= \nabla_\lambda L(x, \lambda)
+\end{aligned}
+\end{split}\]</div>
+<p>This system can be solved using the generalized <span class="math notranslate nohighlight">\(\alpha\)</span> method.</p>
 </section>
+</section>
+</section>
+<div class="toctree-wrapper compound">
+</div>
 </section>
 
     <script type="text/x-thebe-config">
@@ -452,11 +522,11 @@ document.write(`
                   
 <div class="prev-next-area">
     <a class="right-next"
-       href="mass_spring.html"
+       href="kreisel_system.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title"><span class="section-number">1. </span>Mass-Spring Crane Simulation</p>
+        <p class="prev-next-title"><span class="section-number">1. </span>Kreisel System Simulation</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -477,7 +547,13 @@ document.write(`
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#features">Features</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interactive-simulations">Interactive Simulations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interactive-simulations">Interactive Simulations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#solving-a-mass-spring-system-with-a-generalized-alpha-method">Solving a Mass Spring System with a generalized <span class="math notranslate nohighlight">\(\alpha\)</span> Method</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#systems-with-constraints">Systems with constraints</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
   </nav></div>
 

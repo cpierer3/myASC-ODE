@@ -4,9 +4,8 @@ Welcome to the myASC-ODE simulation framework documentation. This book contains 
 
 ## Features
 
-- **Mass-Spring Systems**: Comprehensive 3D mass-spring system simulations
+- **Kreisel Systems**: Simulating a spinning Kreisel
 - **Crane Dynamics**: Realistic crane structure modeling with vibration analysis
-- **Kreisel Systems**: Gyroscopic and rotational dynamics simulations
 
 ## Interactive Simulations
 
@@ -14,45 +13,84 @@ This book contains fully interactive Jupyter notebooks with:
 - Real-time 3D visualizations
 - Dynamic parameter adjustments
 - Comprehensive analysis tools
-- C++ and Python implementations  
+
+Only the user-friendly interface is implemented in Python; all performance-critical computations are handled by the underlying C++ framework.
 
 
 Explore the interactive notebooks to see the simulations in action! We will first briefly mention some of the theory behind the implemented methods.
 
 ### Solving a Mass Spring System with a generalized $\alpha$ Method
 
-In an effort to avoid the instabilities that the newmark method leads to for non linear ODEs, we can Introduce the generalized $\alpha$ method. We recall the Newmark Scheme for a second order ODE $ M\ddot x = Fx $ to be given as
+In an effort to avoid the instabilities that the Newmark method leads to for non linear ODEs, we can introduce the generalized $\alpha$ method. We recall the Newmark scheme for a second order ODE
+
 $$
-x_{n+1} & = & x_n + \tau v_n  + \tau^2 ( ( \frac{1}{2} - \beta) a_n + \beta a_{n+1} ) \\
-v_{n+1} & = & v_n + \tau ( (1-\gamma) a_n + \gamma a_{n+1} )
+M \ddot{x} = F(x)
 $$
-where $v_n$ is $\dot x_n$ and $a_n = M^{-1}F(x_n)$. For a damping parameter $ \rho^\infty $ We can introduce the new variables 
-\begin{align*}
-\alpha_m & = & \frac{2 \rho^\infty - 1}{\rho^\infty + 1} \\
-\alpha_f & = & \frac{\rho^\infty}{\rho^\infty + 1} \\
-\end{align*}
-and set 
-\begin{align*}
-\beta & = & \frac{1}{4} (1 - \alpha_m + \alpha_f)^2 \\
-\gamma & = & \frac{1}{2} - \alpha_m + \alpha_f
-\end{align*}
+
+to be given as
+
+$$
+\begin{aligned}
+x_{n+1} &= x_n + \tau v_n + \tau^2 \left( \left( \tfrac{1}{2} - \beta \right) a_n + \beta a_{n+1} \right), \\
+v_{n+1} &= v_n + \tau \left( (1-\gamma) a_n + \gamma a_{n+1} \right)
+\end{aligned}
+$$
+
+where $v_n = \dot{x}_n$ and $a_n = M^{-1} F(x_n)$.
+
+For a damping parameter $\rho^\infty$, we can introduce the new variables
+
+$$
+\begin{aligned}
+\alpha_m &= \frac{2 \rho^\infty - 1}{\rho^\infty + 1}, \\
+\alpha_f &= \frac{\rho^\infty}{\rho^\infty + 1}
+\end{aligned}
+$$
+
+and set
+
+$$
+\begin{aligned}
+\beta &= \frac{1}{4} (1 - \alpha_m + \alpha_f)^2, \\
+\gamma &= \frac{1}{2} - \alpha_m + \alpha_f
+\end{aligned}
+$$
+
 to get to the generalized $\alpha$ method formulation
-\begin{align*}
-x_{n+1} & = & x_n + \tau v_n  + \tau^2 ( ( \frac{1}{2} - \beta) a_n + \beta a_{n+1} ) \\
-v_{n+1} & = & v_n + \tau ( (1-\gamma) a_n + \gamma a_{n+1} ) \\
-x_{n+1-\alpha_f} & = & (1-\alpha_f) x_{n+1} + \alpha_f x_n \\
-a_{n+1-\alpha_m} & = & (1-\alpha_m) a_{n+1} + \alpha_m a_n
-\end{align*}
+
+$$
+\begin{aligned}
+x_{n+1} &= x_n + \tau v_n + \tau^2 \left( \left( \tfrac{1}{2} - \beta \right) a_n + \beta a_{n+1} \right), \\
+v_{n+1} &= v_n + \tau \left( (1-\gamma) a_n + \gamma a_{n+1} \right), \\
+x_{n+1-\alpha_f} &= (1-\alpha_f) x_{n+1} + \alpha_f x_n, \\
+a_{n+1-\alpha_m} &= (1-\alpha_m) a_{n+1} + \alpha_m a_n
+\end{aligned}
+$$
 
 #### Systems with constraints
 
-We want to implement a way to model joints between two masses, for this we introduce systems with constraints. We can define the Lagrange function for a system with constraints as
+We want to implement a way to model joints between two masses. For this, we introduce systems with constraints. We define the Lagrange function for a constrained system as
+
 $$
-L(x, \lambda) = -U(x) + \left< \lambda , g(x) \right>,
+L(x, \lambda) = -U(x) + \langle \lambda, g(x) \rangle
 $$
-with $U(x) = m g x_z$ and $g(x) := | x - x_0 |^2 - l^2$ being the length constraint, and derive the second Order System of ODEs
+
+with
+
 $$
-m_i \ddot x_i  =  \frac{\partial}{\partial x_i} L(x, \lambda) \\
- 0  =  \nabla_\lambda L(x, \lambda)
+U(x) = m g x_z, \qquad
+g(x) := \lVert x - x_0 \rVert^2 - l^2
 $$
-This we can solve using the generalized $\alpha$ method. 
+
+being the length constraint.
+
+This leads to the second order system of ODEs
+
+$$
+\begin{aligned}
+m_i \ddot{x}_i &= \frac{\partial}{\partial x_i} L(x, \lambda), \\
+0 &= \nabla_\lambda L(x, \lambda)
+\end{aligned}
+$$
+
+This system can be solved using the generalized $\alpha$ method.
