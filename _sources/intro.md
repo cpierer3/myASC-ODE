@@ -1,91 +1,96 @@
-# Welcome to myASC-ODE's documentation!
+# myASC-ODE Simulation Framework
 
-myASC-ODE is a C++ library for solving ordinary differential equations (ODEs).
-The equation is defined by the right hand side function.
-ASC-ODE provides various time-steppers which may be used for ODEs with right hand sides
-given by a function object.
+Welcome to the myASC-ODE simulation framework documentation. This book contains interactive simulations and analysis of mechanical systems using C++ and Python.
 
-## Installation
+## Features
 
-Install myASC-ODE via git-clone:
+- **Kreisel Systems**: Simulating a spinning Kreisel
+- **Crane Dynamics**: Realistic crane structure modeling with vibration analysis
 
-```bash
-git clone https://github.com/cpierer3/myASC-ODE.git
-```
+## Interactive Simulations
 
-To configure and build some tests do:
+This book contains fully interactive Jupyter notebooks with:
+- Real-time 3D visualizations
+- Dynamic parameter adjustments
+- Comprehensive analysis tools
 
-```bash
-cd my-ode-solver
-mkdir build
-cd build
-cmake ..
-make
-```
-
-## Available Time-Stepping Methods
-
-This library implements several numerical methods for solving ordinary differential equations. Each method has different properties regarding accuracy, stability, and computational cost. The following time-stepping methods are available:
-
-1. **Explicit Euler Method** - A simple first-order explicit method
-2. **Implicit Euler Method** - A first-order implicit method with better stability
-3. **Improved Euler Method** - A second-order explicit method (also known as Heun's method)
-4. **Crank-Nicolson Method** - A second-order implicit method with excellent stability properties
-
-Each method is suitable for different types of problems depending on the characteristics of the differential equation system you want to solve.
-
-## Method Details
-
-### Explicit Euler Method
-
-The Explicit Euler method is probably the simplest numerical method for solving ODEs. It follows:
-
-$$y_{n+1} = y_n + h \cdot f(t_n, y_n)$$
-
-**Characteristics:**
-- **Order of accuracy:** First-order (O(h))
-- **Stability:** Conditionally stable
+Only the user-friendly interface is implemented in Python; all performance-critical computations are handled by the underlying C++ framework.
 
 
-### Implicit Euler Method
+Explore the interactive notebooks to see the simulations in action! We will first briefly mention some of the theory behind the implemented methods.
 
-The Implicit Euler method improves stability by using an implicit formulation:
+### Solving a Mass Spring System with a generalized $\alpha$ Method
 
-$$y_{n+1} = y_n + h \cdot f(t_{n+1}, y_{n+1})$$
+In an effort to avoid the instabilities that the Newmark method leads to for non linear ODEs, we can introduce the generalized $\alpha$ method. We recall the Newmark scheme for a second order ODE
 
-**Characteristics:**
-- **Order of accuracy:** First-order (O(h))
-- **Stability:** Unconditionally stable for linear problems
-- **Computational cost:** Higher (requires solving nonlinear equations)
-- **Best for:** Stiff differential equations
+$$
+M \ddot{x} = F(x)
+$$
 
+to be given as
 
-### Improved Euler Method (Heun's Method)
+$$
+\begin{aligned}
+x_{n+1} &= x_n + \tau v_n + \tau^2 \left( \left( \tfrac{1}{2} - \beta \right) a_n + \beta a_{n+1} \right), \\
+v_{n+1} &= v_n + \tau \left( (1-\gamma) a_n + \gamma a_{n+1} \right)
+\end{aligned}
+$$
 
-The Improved Euler method is a second-order Runge-Kutta method that provides better accuracy:
+where $v_n = \dot{x}_n$ and $a_n = M^{-1} F(x_n)$.
 
-$$k_1 = f(t_n, y_n)$$
-$$k_2 = f(t_n + h, y_n + h \cdot k_1)$$
-$$y_{n+1} = y_n + \frac{h}{2}(k_1 + k_2)$$
+For a damping parameter $\rho^\infty$, we can introduce the new variables
 
-**Characteristics:**
-- **Order of accuracy:** Second-order (O(h²))
-- **Stability:** Conditionally stable
-- **Computational cost:** cpmared to standard euler, it requires two function evaluations
+$$
+\begin{aligned}
+\alpha_m &= \frac{2 \rho^\infty - 1}{\rho^\infty + 1}, \\
+\alpha_f &= \frac{\rho^\infty}{\rho^\infty + 1}
+\end{aligned}
+$$
 
-### Crank-Nicolson Method
+and set
 
-The Crank-Nicolson method combines implicit and explicit approaches for optimal stability and accuracy:
+$$
+\begin{aligned}
+\beta &= \frac{1}{4} (1 - \alpha_m + \alpha_f)^2, \\
+\gamma &= \frac{1}{2} - \alpha_m + \alpha_f
+\end{aligned}
+$$
 
-$$y_{n+1} = y_n + \frac{h}{2}[f(t_n, y_n) + f(t_{n+1}, y_{n+1})]$$
+to get to the generalized $\alpha$ method formulation
 
-**Characteristics:**
-- **Order of accuracy:** Second-order (O(h²))
-- **Stability:** Unconditionally stable
-- **Computational cost:** Higher (requires solving nonlinear equations)
+$$
+\begin{aligned}
+x_{n+1} &= x_n + \tau v_n + \tau^2 \left( \left( \tfrac{1}{2} - \beta \right) a_n + \beta a_{n+1} \right), \\
+v_{n+1} &= v_n + \tau \left( (1-\gamma) a_n + \gamma a_{n+1} \right), \\
+x_{n+1-\alpha_f} &= (1-\alpha_f) x_{n+1} + \alpha_f x_n, \\
+a_{n+1-\alpha_m} &= (1-\alpha_m) a_{n+1} + \alpha_m a_n
+\end{aligned}
+$$
 
+#### Systems with constraints
 
+We want to implement a way to model joints between two masses. For this, we introduce systems with constraints. We define the Lagrange function for a constrained system as
 
+$$
+L(x, \lambda) = -U(x) + \langle \lambda, g(x) \rangle
+$$
 
+with
 
-   
+$$
+U(x) = m g x_z, \qquad
+g(x) := \lVert x - x_0 \rVert^2 - l^2
+$$
+
+being the length constraint.
+
+This leads to the second order system of ODEs
+
+$$
+\begin{aligned}
+m_i \ddot{x}_i &= \frac{\partial}{\partial x_i} L(x, \lambda), \\
+0 &= \nabla_\lambda L(x, \lambda)
+\end{aligned}
+$$
+
+This system can be solved using the generalized $\alpha$ method.

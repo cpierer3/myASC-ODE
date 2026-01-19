@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Welcome to myASC-ODE’s documentation! &#8212; ASC-ODE</title>
+    <title>myASC-ODE Simulation Framework &#8212; myASC-ODE Simulation Framework</title>
   
   
   
@@ -32,7 +32,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
     <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css?v=6644e6bb" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
     <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
   
@@ -62,7 +62,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'intro';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Explicit Euler Method" href="explicit_euler.html" />
+    <link rel="next" title="1. Kreisel System Simulation" href="kreisel_system.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -156,8 +156,8 @@
       
     
     
-    <img src="_static/ASC_Logo_transparent_300ppi_RGB.png" class="logo__image only-light" alt="ASC-ODE - Home"/>
-    <script>document.write(`<img src="_static/ASC_Logo_transparent_300ppi_RGB.png" class="logo__image only-dark" alt="ASC-ODE - Home"/>`);</script>
+    <img src="_static/logo.png" class="logo__image only-light" alt="myASC-ODE Simulation Framework - Home"/>
+    <script>document.write(`<img src="_static/logo.png" class="logo__image only-dark" alt="myASC-ODE Simulation Framework - Home"/>`);</script>
   
   
 </a></div>
@@ -178,15 +178,13 @@
         <ul class="nav bd-sidenav bd-sidenav__home-link">
             <li class="toctree-l1 current active">
                 <a class="reference internal" href="#">
-                    Welcome to myASC-ODE’s documentation!
+                    myASC-ODE Simulation Framework
                 </a>
             </li>
         </ul>
         <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="explicit_euler.html">Explicit Euler Method</a></li>
-<li class="toctree-l1"><a class="reference internal" href="implicit_euler.html">Implicit Euler Method</a></li>
-<li class="toctree-l1"><a class="reference internal" href="improved_euler.html">Improved Euler Method (Heun’s Method)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="crank_nicolson.html">Crank-Nicolson Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kreisel_system.html">1. Kreisel System Simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mass_spring.html">2. Mass-Spring Crane Simulation</a></li>
 </ul>
 
     </div>
@@ -230,18 +228,50 @@
 <div class="article-header-buttons">
 
 
-<a href="https://github.com/JSchoeberl/IntroSC.git" target="_blank"
-   class="btn btn-sm btn-source-repository-button"
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/constantinpierer/myASC-ODE" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
    title="Source repository"
-   data-bs-placement="bottom" data-bs-toggle="tooltip"
+   data-bs-placement="left" data-bs-toggle="tooltip"
 >
   
 
 <span class="btn__icon-container">
   <i class="fab fa-github"></i>
   </span>
-
+<span class="btn__text-container">Repository</span>
 </a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/constantinpierer/myASC-ODE/issues/new?title=Issue%20on%20page%20%2Fintro.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
 
 
 
@@ -340,7 +370,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Welcome to myASC-ODE’s documentation!</h1>
+    <h1>myASC-ODE Simulation Framework</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -350,13 +380,12 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#available-time-stepping-methods">Available Time-Stepping Methods</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#method-details">Method Details</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#explicit-euler-method">Explicit Euler Method</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#implicit-euler-method">Implicit Euler Method</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#improved-euler-method-heun-s-method">Improved Euler Method (Heun’s Method)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crank-nicolson-method">Crank-Nicolson Method</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#features">Features</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interactive-simulations">Interactive Simulations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#solving-a-mass-spring-system-with-a-generalized-alpha-method">Solving a Mass Spring System with a generalized <span class="math notranslate nohighlight">\(\alpha\)</span> Method</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#systems-with-constraints">Systems with constraints</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -370,91 +399,92 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="welcome-to-myasc-ode-s-documentation">
-<h1>Welcome to myASC-ODE’s documentation!<a class="headerlink" href="#welcome-to-myasc-ode-s-documentation" title="Link to this heading">#</a></h1>
-<p>myASC-ODE is a C++ library for solving ordinary differential equations (ODEs).
-The equation is defined by the right hand side function.
-ASC-ODE provides various time-steppers which may be used for ODEs with right hand sides
-given by a function object.</p>
-<section id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
-<p>Install myASC-ODE via git-clone:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/cpierer3/myASC-ODE.git
-</pre></div>
-</div>
-<p>To configure and build some tests do:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>my-ode-solver
-mkdir<span class="w"> </span>build
-<span class="nb">cd</span><span class="w"> </span>build
-cmake<span class="w"> </span>..
-make
-</pre></div>
-</div>
-</section>
-<section id="available-time-stepping-methods">
-<h2>Available Time-Stepping Methods<a class="headerlink" href="#available-time-stepping-methods" title="Link to this heading">#</a></h2>
-<p>This library implements several numerical methods for solving ordinary differential equations. Each method has different properties regarding accuracy, stability, and computational cost. The following time-stepping methods are available:</p>
-<ol class="arabic simple">
-<li><p><strong>Explicit Euler Method</strong> - A simple first-order explicit method</p></li>
-<li><p><strong>Implicit Euler Method</strong> - A first-order implicit method with better stability</p></li>
-<li><p><strong>Improved Euler Method</strong> - A second-order explicit method (also known as Heun’s method)</p></li>
-<li><p><strong>Crank-Nicolson Method</strong> - A second-order implicit method with excellent stability properties</p></li>
-</ol>
-<p>Each method is suitable for different types of problems depending on the characteristics of the differential equation system you want to solve.</p>
-</section>
-<section id="method-details">
-<h2>Method Details<a class="headerlink" href="#method-details" title="Link to this heading">#</a></h2>
-<section id="explicit-euler-method">
-<h3>Explicit Euler Method<a class="headerlink" href="#explicit-euler-method" title="Link to this heading">#</a></h3>
-<p>The Explicit Euler method is probably the simplest numerical method for solving ODEs. It follows:</p>
-<div class="math notranslate nohighlight">
-\[y_{n+1} = y_n + h \cdot f(t_n, y_n)\]</div>
-<p><strong>Characteristics:</strong></p>
+  <section class="tex2jax_ignore mathjax_ignore" id="myasc-ode-simulation-framework">
+<h1>myASC-ODE Simulation Framework<a class="headerlink" href="#myasc-ode-simulation-framework" title="Link to this heading">#</a></h1>
+<p>Welcome to the myASC-ODE simulation framework documentation. This book contains interactive simulations and analysis of mechanical systems using C++ and Python.</p>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><strong>Order of accuracy:</strong> First-order (O(h))</p></li>
-<li><p><strong>Stability:</strong> Conditionally stable</p></li>
+<li><p><strong>Kreisel Systems</strong>: Simulating a spinning Kreisel</p></li>
+<li><p><strong>Crane Dynamics</strong>: Realistic crane structure modeling with vibration analysis</p></li>
 </ul>
 </section>
-<section id="implicit-euler-method">
-<h3>Implicit Euler Method<a class="headerlink" href="#implicit-euler-method" title="Link to this heading">#</a></h3>
-<p>The Implicit Euler method improves stability by using an implicit formulation:</p>
-<div class="math notranslate nohighlight">
-\[y_{n+1} = y_n + h \cdot f(t_{n+1}, y_{n+1})\]</div>
-<p><strong>Characteristics:</strong></p>
+<section id="interactive-simulations">
+<h2>Interactive Simulations<a class="headerlink" href="#interactive-simulations" title="Link to this heading">#</a></h2>
+<p>This book contains fully interactive Jupyter notebooks with:</p>
 <ul class="simple">
-<li><p><strong>Order of accuracy:</strong> First-order (O(h))</p></li>
-<li><p><strong>Stability:</strong> Unconditionally stable for linear problems</p></li>
-<li><p><strong>Computational cost:</strong> Higher (requires solving nonlinear equations)</p></li>
-<li><p><strong>Best for:</strong> Stiff differential equations</p></li>
+<li><p>Real-time 3D visualizations</p></li>
+<li><p>Dynamic parameter adjustments</p></li>
+<li><p>Comprehensive analysis tools</p></li>
 </ul>
+<p>Only the user-friendly interface is implemented in Python; all performance-critical computations are handled by the underlying C++ framework.</p>
+<p>Explore the interactive notebooks to see the simulations in action! We will first briefly mention some of the theory behind the implemented methods.</p>
+<section id="solving-a-mass-spring-system-with-a-generalized-alpha-method">
+<h3>Solving a Mass Spring System with a generalized <span class="math notranslate nohighlight">\(\alpha\)</span> Method<a class="headerlink" href="#solving-a-mass-spring-system-with-a-generalized-alpha-method" title="Link to this heading">#</a></h3>
+<p>In an effort to avoid the instabilities that the Newmark method leads to for non linear ODEs, we can introduce the generalized <span class="math notranslate nohighlight">\(\alpha\)</span> method. We recall the Newmark scheme for a second order ODE</p>
+<div class="math notranslate nohighlight">
+\[
+M \ddot{x} = F(x)
+\]</div>
+<p>to be given as</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}
+\begin{aligned}
+x_{n+1} &amp;= x_n + \tau v_n + \tau^2 \left( \left( \tfrac{1}{2} - \beta \right) a_n + \beta a_{n+1} \right), \\
+v_{n+1} &amp;= v_n + \tau \left( (1-\gamma) a_n + \gamma a_{n+1} \right)
+\end{aligned}
+\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(v_n = \dot{x}_n\)</span> and <span class="math notranslate nohighlight">\(a_n = M^{-1} F(x_n)\)</span>.</p>
+<p>For a damping parameter <span class="math notranslate nohighlight">\(\rho^\infty\)</span>, we can introduce the new variables</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}
+\begin{aligned}
+\alpha_m &amp;= \frac{2 \rho^\infty - 1}{\rho^\infty + 1}, \\
+\alpha_f &amp;= \frac{\rho^\infty}{\rho^\infty + 1}
+\end{aligned}
+\end{split}\]</div>
+<p>and set</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}
+\begin{aligned}
+\beta &amp;= \frac{1}{4} (1 - \alpha_m + \alpha_f)^2, \\
+\gamma &amp;= \frac{1}{2} - \alpha_m + \alpha_f
+\end{aligned}
+\end{split}\]</div>
+<p>to get to the generalized <span class="math notranslate nohighlight">\(\alpha\)</span> method formulation</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}
+\begin{aligned}
+x_{n+1} &amp;= x_n + \tau v_n + \tau^2 \left( \left( \tfrac{1}{2} - \beta \right) a_n + \beta a_{n+1} \right), \\
+v_{n+1} &amp;= v_n + \tau \left( (1-\gamma) a_n + \gamma a_{n+1} \right), \\
+x_{n+1-\alpha_f} &amp;= (1-\alpha_f) x_{n+1} + \alpha_f x_n, \\
+a_{n+1-\alpha_m} &amp;= (1-\alpha_m) a_{n+1} + \alpha_m a_n
+\end{aligned}
+\end{split}\]</div>
+<section id="systems-with-constraints">
+<h4>Systems with constraints<a class="headerlink" href="#systems-with-constraints" title="Link to this heading">#</a></h4>
+<p>We want to implement a way to model joints between two masses. For this, we introduce systems with constraints. We define the Lagrange function for a constrained system as</p>
+<div class="math notranslate nohighlight">
+\[
+L(x, \lambda) = -U(x) + \langle \lambda, g(x) \rangle
+\]</div>
+<p>with</p>
+<div class="math notranslate nohighlight">
+\[
+U(x) = m g x_z, \qquad
+g(x) := \lVert x - x_0 \rVert^2 - l^2
+\]</div>
+<p>being the length constraint.</p>
+<p>This leads to the second order system of ODEs</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}
+\begin{aligned}
+m_i \ddot{x}_i &amp;= \frac{\partial}{\partial x_i} L(x, \lambda), \\
+0 &amp;= \nabla_\lambda L(x, \lambda)
+\end{aligned}
+\end{split}\]</div>
+<p>This system can be solved using the generalized <span class="math notranslate nohighlight">\(\alpha\)</span> method.</p>
 </section>
-<section id="improved-euler-method-heun-s-method">
-<h3>Improved Euler Method (Heun’s Method)<a class="headerlink" href="#improved-euler-method-heun-s-method" title="Link to this heading">#</a></h3>
-<p>The Improved Euler method is a second-order Runge-Kutta method that provides better accuracy:</p>
-<div class="math notranslate nohighlight">
-\[k_1 = f(t_n, y_n)\]</div>
-<div class="math notranslate nohighlight">
-\[k_2 = f(t_n + h, y_n + h \cdot k_1)\]</div>
-<div class="math notranslate nohighlight">
-\[y_{n+1} = y_n + \frac{h}{2}(k_1 + k_2)\]</div>
-<p><strong>Characteristics:</strong></p>
-<ul class="simple">
-<li><p><strong>Order of accuracy:</strong> Second-order (O(h²))</p></li>
-<li><p><strong>Stability:</strong> Conditionally stable</p></li>
-<li><p><strong>Computational cost:</strong> cpmared to standard euler, it requires two function evaluations</p></li>
-</ul>
-</section>
-<section id="crank-nicolson-method">
-<h3>Crank-Nicolson Method<a class="headerlink" href="#crank-nicolson-method" title="Link to this heading">#</a></h3>
-<p>The Crank-Nicolson method combines implicit and explicit approaches for optimal stability and accuracy:</p>
-<div class="math notranslate nohighlight">
-\[y_{n+1} = y_n + \frac{h}{2}[f(t_n, y_n) + f(t_{n+1}, y_{n+1})]\]</div>
-<p><strong>Characteristics:</strong></p>
-<ul class="simple">
-<li><p><strong>Order of accuracy:</strong> Second-order (O(h²))</p></li>
-<li><p><strong>Stability:</strong> Unconditionally stable</p></li>
-<li><p><strong>Computational cost:</strong> Higher (requires solving nonlinear equations)</p></li>
-</ul>
 </section>
 </section>
 <div class="toctree-wrapper compound">
@@ -492,11 +522,11 @@ make
                   
 <div class="prev-next-area">
     <a class="right-next"
-       href="explicit_euler.html"
+       href="kreisel_system.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Explicit Euler Method</p>
+        <p class="prev-next-title"><span class="section-number">1. </span>Kreisel System Simulation</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -516,13 +546,12 @@ make
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#available-time-stepping-methods">Available Time-Stepping Methods</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#method-details">Method Details</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#explicit-euler-method">Explicit Euler Method</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#implicit-euler-method">Implicit Euler Method</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#improved-euler-method-heun-s-method">Improved Euler Method (Heun’s Method)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crank-nicolson-method">Crank-Nicolson Method</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#features">Features</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interactive-simulations">Interactive Simulations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#solving-a-mass-spring-system-with-a-generalized-alpha-method">Solving a Mass Spring System with a generalized <span class="math notranslate nohighlight">\(\alpha\)</span> Method</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#systems-with-constraints">Systems with constraints</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -539,7 +568,7 @@ make
   <div class="footer-item">
     
 <p class="component-author">
-By Joe Smith
+By Constantin Pierer, Jonas Gastecker, Lukas Lechner
 </p>
 
   </div>
@@ -549,7 +578,7 @@ By Joe Smith
 
   <p class="copyright">
     
-      © Copyright 2025.
+      © Copyright 2023.
       <br/>
     
   </p>
