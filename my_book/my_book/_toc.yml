@@ -6,6 +6,8 @@ root: intro
 options:
   numbered: true
 chapters:
+- file: simple_pendulum
+  title: Simple Pendulum
 - file: kreisel_system
   title: Kreisel System Simulation
 - file: mass_spring
