@@ -6,6 +6,7 @@ root: intro
 options:
   numbered: true
 chapters:
+- file: implementing_ode_methods
 - file: simple_pendulum
   title: Simple Pendulum
 - file: kreisel_system
