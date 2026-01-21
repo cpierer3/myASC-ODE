@@ -2,6 +2,12 @@
 
 Welcome to the myASC-ODE simulation framework documentation. This book contains interactive simulations and analysis of mechanical systems using C++ and Python.
 
+Contributors
+- Constantin Pierer
+- Jonas Gastecker
+- Lukas Lechner
+
+
 ## Features
 
 - **Kreisel Systems**: Simulating a spinning Kreisel
